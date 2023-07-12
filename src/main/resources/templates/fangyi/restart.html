@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>角色管理页面</title>
+    <link rel="stylesheet" href="resources/layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" href="resources/css/public.css" th:href="@{/css/public.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/layui_ext/dtree/dtree.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/layui_ext/dtree/font/dtreefont.css}" media="all"/>
+</head>
+<body class="childrenBody">
+<!--查询条件-->
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 15px;">
+    <legend>搜索条件</legend>
+</fieldset>
+<form action="" method="post" id="searchFrm" lay-filter="searchFrm" class="layui-form">
+    <div class="layui-form-item">
+
+        <div class="layui-inline">
+            <label class="layui-form-label">公司名称</label>
+            <div class="layui-input-inline">
+                <input type="text" name="name" id="name" class="layui-input input-radius"
+                       placeholder="请输入公司名称">
+            </div>
+        </div>
+    </div>
+
+
+
+        <div class="layui-inline" style="margin-left: 10%">
+            <button type="button" class="layui-btn layui-btn-sm layui-btn-radius" lay-submit="" lay-filter="doSearch"><i
+                    class="layui-icon layui-icon-search layui-icon-normal"></i>查询
+            </button>
+            <button type="reset" id="resetHospital" class="layui-btn layui-btn-sm layui-btn-radius layui-btn-warm"><i
+                    class="layui-icon layui-icon-refresh"></i><span>重置</span>
+            </button>
+        </div>
+    </div>
+</form>
+
+
+<!--数据表格-->
+<div>
+    <table class="layui-hide" id="hospitalTable" lay-filter="hospitalTable"></table>
+    <div id="hospitalToolBar" style="display: none">
+        <button type="button" lay-event="add"  class="layui-btn layui-btn-sm layui-btn-normal layui-btn-radius">
+            <i class="layui-icon layui-icon-add-1"></i>添加
+        </button>
+    </div>
+    <div id="hospitalRowBar" style="display: none;">
+        <button type="button" lay-event="update"  class="layui-btn layui-btn-sm layui-btn-radius"><i
+                class="layui-icon layui-icon-edit"></i>申请
+        </button>
+        <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger layui-btn-radius"><i
+                class="layui-icon layui-icon-delete"></i>编辑
+        </button>
+
+    </div>
+</div>
+
+
+
+
+<!--添加和修改弹出层-->
+<div id="addOrUpdateDiv" style="display: none;padding: 10px;padding-right: 5%">
+    <form action="" method="post" class="layui-form" id="dataFrm" lay-filter="dataFrm">
+        <div class="layui-form-item">
+
+            <div class="layui-inline">
+                <label class="layui-form-label">姓名</label>
+                <div class="layui-input-block">
+                    <input type="hidden" name="id">
+                    <input type="text" name="name" lay-verify="required" autocomplete="off"
+                           class="layui-input input-radius" placeholder="请输入角色名称">
+                </div>
+
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">公司名称</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="cid">
+                        <input type="text" name="companyname" lay-verify="required" autocomplete="off"
+                               class="layui-input input-radius" placeholder="请输入角色名称">
+                    </div>
+
+
+
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">公司地址</label>
+                        <div class="layui-input-block">
+                            <textarea placeholder="请输入内容" class="layui-textarea" name="address" cols="200"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="text-align: center;padding-right: 7%">
+                <button type="button" class="layui-btn layui-btn-radius" lay-submit="" lay-filter="doSubmit" id="doSubmit"><i
+                        class="layui-icon layui-icon-search layui-icon-normal"></i>申请
+                </button>
+                <button type="button" class="layui-btn layui-btn-radius" lay-submit="" lay-filter="doSubmit" id="doSubmit"><i
+                        class="layui-icon layui-icon-search layui-icon-normal"></i>编辑
+                </button>
+
+                <button type="reset" class="layui-btn layui-btn-radius layui-btn-warm"><i
+                        class="layui-icon layui-icon-refresh"></i><span>重置</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--分配权限弹出层-->
+
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+
+
+<script type="text/javascript">
+    layui.extend({
+        dtree: '/layui_ext/dtree/dtree'
+    }).use(['jquery', 'form', 'layer', 'laydate', 'table','dtree'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var table = layui.table;
+
+        //初始化时间选择器
+        laydate.render({
+            elem: "#startTime",
+            type: "datetime"
+        });
+        laydate.render({
+            elem: "#endTime",
+            type: "datetime"
+        });
+
+        //初始化表格
+        var tableIns = table.render({
+            elem: "#hospitalTable",
+            title: "角色数据表格",
+            url: "/restart/loadAllRestart",
+            toolbar: "#hospitalToolBar",
+            page: true,
+
+            height: "full-190",
+            cols: [ [
+                {field: 'id', title: 'ID', align: 'center'},
+                {field: 'name', title: '姓名', align: 'center'},
+                {field: 'companyname', title: '公司名称', align: 'center'},
+                {field: 'address', title: '公司地址', align: 'center'},
+                {fixed: 'right', title: '操作', toolbar: '#hospitalRowBar', align: 'center',width:400}
+            ] ],
+            done:function (data, curr, count) {
+                //不是第一页时，如果当前返回的数据为0那么就返回上一页
+                if(data.data.length==0&&curr!=1){
+                    tableIns.reload({
+                        page:{
+                            curr:curr-1
+                        }
+                    })
+                }
+            }
+        });
+
+        //点击重置按钮时，重置表单的值
+        $("#resetHospital").click(function () {
+            $("#searchFrm")[0].reset();
+        });
+
+        //监控模糊查询按钮事件
+        form.on("submit(doSearch)", function (data) {
+            var params = $("#searchFrm").serialize();
+            tableIns.reload({
+//                where: data.field,
+                url:"/hospital/?"+params,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+
+        //监控工具条事件
+        table.on("toolbar(hospitalTable)", function (obj) {
+            switch (obj.event) {
+                case 'add':
+                    openAddLayer();
+                break;
+            };
+        });
+
+        //监控行工具条事件
+        table.on("tool(hospitalTable)",function (obj) {
+            //获取当前行数据
+            var data = obj.data;
+            switch (obj.event){
+                case 'update':
+                    updateHospital(data);
+                    break;
+                case 'delete':
+                    deleteHospital(data);
+                break;
+
+            };
+        });
+
+        var mainIndex;
+        var url;
+
+        //打开添加弹出层
+        function openAddLayer() {
+            mainIndex = layer.open({
+                type:1,
+                content:$("#addOrUpdateDiv"),
+                area:['800px','350px'],
+                title:'添加角色',
+                success:function () {
+                    $("#dataFrm")[0].reset();
+                    url="/hospital/addHospital";
+                }
+            });
+        }
+
+        //打开修改弹出层
+        function updateHospital(data) {
+            mainIndex = layer.open({
+                type:1,
+                content:$("#addOrUpdateDiv"),
+                area:['800px','350px'],
+                title:'修改角色',
+                success:function () {
+                    //清空原有的数据
+                    $("#dataFrm")[0].reset();
+                    //装载新的数据
+                    form.val("dataFrm",data);
+                    url="/hospital/updateHospital";
+                }
+            });
+        }
+
+        //提交按钮事件
+        form.on("submit(doSubmit)",function (data) {
+            $.post(url,data.field,function (res) {
+                if (res.code==200){
+                    tableIns.reload();
+                }
+                layer.msg(res.msg);
+                layer.close(mainIndex);
+            });
+            return false;
+        });
+
+        //删除
+        function deleteHospital(data) {
+            layer.confirm('你确定要删除【'+data.name+'】这条数据吗？如果您删除该角色，那么所有拥有该角色的用户将没有角色，请重新给这些用户分配角色！',{icon: 3,title:'提示'},function (index) {
+                $.post("/hospital/deleteHospital",{id:data.id},function (res) {
+                    if (res.code==200){
+                        tableIns.reload({
+                            where:"",
+                        });
+                    }
+                    layer.msg(res.msg);
+                });
+                layer.close(index);
+            });
+        }
+
+
+    });
+
+</script>
+
+</body>
+</html>

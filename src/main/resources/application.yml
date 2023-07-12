@@ -4,3 +4,23 @@ spring:
     password: 123456
     url: jdbc:mysql://127.0.0.1:3306/nocv?useUnicode=true&characterEncoding=utf8&useSSL=false
     driver-class-name: com.mysql.jdbc.Driver
+
+
+#shiro配置路径,设置拦截路径
+shiro:
+  anon-urls:
+    - /toLogin*
+    - /login.html*
+    - /login/login
+    - /login/getCode
+    - /css/**
+    - /signup.html*
+    - /echarts/**
+    - /images/**
+    - /layui/**
+    - /layui_ext/**
+    - /js/**
+  login-url: /index.html
+  login-out-url: /login/logout*
+  authc-ulrs:
+    - /**

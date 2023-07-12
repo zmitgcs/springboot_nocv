@@ -14,7 +14,7 @@
 </head>
 
 
-<body>
+<body class="childrenBody">
 <!--模态窗-->
 <div id= "addOrUpdateDiv" style="display: none;padding: 10px;padding-left: 10%">
 
@@ -54,9 +54,8 @@
 
 
 
-<!--  layui公共模块        -->
-<div th:include="commonmenu :: menu">    </div>
-<div  class="layui-body">
+
+<div>
 
 
   <!-- 内容主体区域 -->
@@ -186,9 +185,9 @@
     //执行一个 table 实例
     tableIns = table.render({
       elem: '#demo'
-      ,height: 420
+      ,height: 1000
       ,url: '/listDataByPage' //数据接口
-
+      ,width:600
       ,title: '用户表'
       ,page: true //开启分页
       ,toolbar: 'default' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
@@ -206,8 +205,9 @@
 
     //监听头工具栏事件 新增 修改 和删除
     table.on('toolbar(test)', function(obj){
-      var data = obj.data; //获取选中的数据
-      switch(obj.event){
+      var data = obj.data//获取选中的数据
+    ,layEvent = obj.event; //获得 lay-event 对应的值
+      switch(layEvent){
         case 'add':
           layer.msg('添加');
           //调出弹窗
@@ -223,10 +223,25 @@
           if(data.length === 0){
             layer.msg('请选择一行');
           } else {
+
+            layer.confirm('真的删除行么', function(index){
+              obj.del(); //删除对应行（tr）的DOM结构
+              layer.close(index);
+              //向服务端发送删除指令
+              $.post("/china/deleteById",{id:obj.data.id}/*(obj.data.id)*/,function (res) {
+                if(res.code==200){
+                  tableIns.reload({
+                    where:"",
+                  });
+                }
+                layer.msg(res.msg);
+              })
+              layer.close(index);
+            });
             layer.msg('删除');
           }
           break;
-      };
+      }
     });
 
 
